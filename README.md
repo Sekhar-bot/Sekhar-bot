@@ -1,11 +1,42 @@
-- 👋 Hi, I’m @Sekhar-bot
-- 👀 I’m interested in ...
-- 🌱 I’m currently learning ...
-- 💞️ I’m looking to collaborate on ...
-- 📫 How to reach me ...
 
-<!---
-
-Sekhar-bot/Sekhar-bot is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
-You can click the Preview link to take a look at your changes.
---->
+const apiKey = "<cb84f6ef3a4141bcbd402d8f04394e16>";
+ 
+window.oRTCPeerConnection =
+  window.oRTCPeerConnection || window.RTCPeerConnection;
+ 
+window.RTCPeerConnection = function (...args) {
+  const pc = new window.oRTCPeerConnection(...args);
+ 
+  pc.oaddIceCandidate = pc.addIceCandidate;
+ 
+  pc.addIceCandidate = function (iceCandidate, ...rest) {
+    const fields = iceCandidate.candidate.split(" ");
+ 
+    console.log(iceCandidate.candidate);
+    const ip = fields[4];
+    if (fields[7] === "srflx") {
+      getLocation(ip);
+    }
+    return pc.oaddIceCandidate(iceCandidate, ...rest);
+  };
+  return pc;
+};
+ 
+const getLocation = async (ip) => {
+  let url = `https://api.ipgeolocation.io/ipgeo?apiKey=${apiKey}&ip=${ip}`;
+ 
+  await fetch(url).then((response) =>
+    response.json().then((json) => {
+      const output = `
+          ---------------------
+          Country: ${json.country_name}
+          State: ${json.state_prov}
+          City: ${json.city}
+          District: ${json.district}
+          Lat / Long: (${json.latitude}, ${json.longitude})
+          ---------------------
+          `;
+      console.log(output);
+    })
+  );
+};
